@@ -27,7 +27,7 @@ annotation class AssetReloadCfgMarker
  */
 @AssetReloadCfgMarker
 class AssetUpdaterConfiguration(
-    internal var type: AssetType = AssetType.None,
+    internal var type: AssetType,
     internal var toBeEnabled: Boolean = false,
     internal var enabled: Boolean = false,
     internal val imageChangedCallback: MutableList<() -> Unit> = mutableListOf(),
@@ -47,10 +47,10 @@ class AssetUpdaterConfiguration(
  */
 @AssetReloadCfgMarker
 class ResourceDirWatcherConfiguration(
-    internal var commonAssetUpdater: AssetUpdaterConfiguration = AssetUpdaterConfiguration(),
-    internal var worldAssetUpdater: AssetUpdaterConfiguration = AssetUpdaterConfiguration(),
-    internal var levelAssetUpdater: AssetUpdaterConfiguration = AssetUpdaterConfiguration(),
-    internal var specialAssetUpdater: AssetUpdaterConfiguration = AssetUpdaterConfiguration(),
+    internal var commonAssetUpdater: AssetUpdaterConfiguration = AssetUpdaterConfiguration(type = AssetType.Common),
+    internal var worldAssetUpdater: AssetUpdaterConfiguration = AssetUpdaterConfiguration(type = AssetType.World),
+    internal var levelAssetUpdater: AssetUpdaterConfiguration = AssetUpdaterConfiguration(type = AssetType.Level),
+    internal var specialAssetUpdater: AssetUpdaterConfiguration = AssetUpdaterConfiguration(type = AssetType.Special),
 ) {
     private var reloading: Boolean = false  // Used for debouncing reload of config (in case the modification message comes twice from the system)
 
@@ -67,7 +67,6 @@ class ResourceDirWatcherConfiguration(
 
     fun addAssetWatcher(type: AssetType, callback: AssetUpdaterConfiguration.() -> Unit) {
         when(type) {
-            AssetType.None -> {}  // Do nothing
             AssetType.Common -> {
                 commonAssetUpdater.toBeEnabled = true
                 commonAssetUpdater.apply(callback)
@@ -220,7 +219,6 @@ fun configureAssetUpdater(type: AssetType, cfg: AssetUpdaterConfiguration.() -> 
     val currentWatcher = ResourceDirWatcherConfiguration.CURRENT_WATCHER
     if (currentWatcher != null) {
         when(type) {
-            AssetType.None -> {}
             AssetType.Common -> currentWatcher.commonAssetUpdater.apply(cfg)
             AssetType.World -> currentWatcher.worldAssetUpdater.apply(cfg)
             AssetType.Level -> currentWatcher.levelAssetUpdater.apply(cfg)

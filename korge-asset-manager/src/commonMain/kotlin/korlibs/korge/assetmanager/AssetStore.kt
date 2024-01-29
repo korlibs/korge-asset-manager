@@ -33,10 +33,10 @@ object AssetStore {
     val specialAtlas: MutableAtlasUnit = MutableAtlasUnit(1024, 2048, border = 1)
 
 //    @Volatile
-    internal var commonAssetConfig: AssetModel = AssetModel()
-    internal var currentWorldAssetConfig: AssetModel = AssetModel()
-    internal var currentLevelAssetConfig: AssetModel = AssetModel()
-    internal var specialAssetConfig: AssetModel = AssetModel()
+    internal var commonAssetConfig: AssetModel = AssetModel(type = AssetType.Common)
+    internal var currentWorldAssetConfig: AssetModel = AssetModel(type = AssetType.World)
+    internal var currentLevelAssetConfig: AssetModel = AssetModel(type = AssetType.Level)
+    internal var specialAssetConfig: AssetModel = AssetModel(type = AssetType.Special)
 
     var entityConfigs: MutableMap<String, ConfigBase> = mutableMapOf()
 // TODO    private var tiledMaps: MutableMap<String, Pair<AssetType, TiledMap>> = mutableMapOf()
@@ -157,7 +157,7 @@ object AssetStore {
 
     private fun prepareCurrentAssets(newAssetConfig: AssetModel, currentAssetConfig: AssetModel): AssetModel? =
         when (currentAssetConfig.folderName) {
-            "none" -> {
+            "" -> {
                 // Just load new assets
                 newAssetConfig
             }
