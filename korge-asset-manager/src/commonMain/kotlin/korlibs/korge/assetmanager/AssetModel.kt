@@ -44,9 +44,8 @@ data class AssetModel(
         tileMaps[id] = fileName
     }
 
-    fun addEntityConfig(id: String, fileName: ConfigBase) {
-        // Add this when we add Fleks in GameScene
-        TODO()
+    fun addEntityConfig(id: String, config: ConfigBase) {
+        entityConfigs[id] = config
     }
 }
 
