@@ -16,12 +16,17 @@ data class AssetModel(
     val backgrounds: MutableMap<String, ParallaxConfig> = mutableMapOf(),
     val images: MutableMap<String, ImageDataConfig> = mutableMapOf(),
     val fonts: MutableMap<String, String> = mutableMapOf(),
-    val tileMaps: MutableMap<String, String> = mutableMapOf(),
+    val tileMaps: MutableMap<String, TileMapConfig> = mutableMapOf(),
     val entityConfigs: MutableMap<String, ConfigBase> = mutableMapOf()
 ) {
     data class ImageDataConfig(
         val fileName: String = "",
         val layers: String? = null
+    )
+
+    data class TileMapConfig(
+        val fileName: String,
+        val type: TileMapType
     )
 
     fun addSound(id: String, fileName: String) {
@@ -40,8 +45,8 @@ data class AssetModel(
         fonts[id] = fileName
     }
 
-    fun addTileMap(id: String, fileName: String) {
-        tileMaps[id] = fileName
+    fun addTileMap(id: String, fileName: String, type: TileMapType) {
+        tileMaps[id] = TileMapConfig(fileName, type)
     }
 
     fun addEntityConfig(id: String, config: ConfigBase) {
@@ -60,6 +65,7 @@ suspend fun loadAssets(type: AssetType, folderName: String, hotReloading: Boolea
     }
 }
 
-enum class AssetType{ Common, World, Level, Special }
+enum class AssetType { Common, World, Level, Special }
+enum class TileMapType { LDtk, Tiled }
 
 interface ConfigBase

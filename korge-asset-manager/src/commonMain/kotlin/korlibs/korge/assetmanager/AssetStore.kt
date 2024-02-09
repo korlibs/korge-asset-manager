@@ -9,6 +9,8 @@ import korlibs.image.font.Font
 import korlibs.image.font.readBitmapFont
 import korlibs.image.format.*
 import korlibs.io.file.std.resourcesVfs
+import korlibs.korge.ldtk.*
+import korlibs.korge.ldtk.view.*
 import korlibs.korge.parallax.ParallaxDataContainer
 import korlibs.korge.parallax.readParallaxDataContainer
 import korlibs.time.Stopwatch
@@ -40,6 +42,7 @@ object AssetStore {
 
     var entityConfigs: MutableMap<String, ConfigBase> = mutableMapOf()
 // TODO    private var tiledMaps: MutableMap<String, Pair<AssetType, TiledMap>> = mutableMapOf()
+    internal var ldtkWorld: MutableMap<String, Pair<AssetType, LDTKWorld>> = mutableMapOf()
     internal var backgrounds: MutableMap<String, Pair<AssetType, ParallaxDataContainer>> = mutableMapOf()
     internal var images: MutableMap<String, Pair<AssetType, ImageDataContainer>> = mutableMapOf()
     internal var fonts: MutableMap<String, Pair<AssetType, Font>> = mutableMapOf()
@@ -69,6 +72,16 @@ object AssetStore {
                 } else error("AssetStore: Slice '$slice' of image '$name' not found!")
             }
         } else error("AssetStore: Image '$name' not found!")
+
+    fun getLdtkWorld(name: String) : LDTKWorld =
+        if (ldtkWorld.contains(name)) {
+            ldtkWorld[name]!!.second
+        } else error("AssetStore: LDtkWorld '$name' not found!")
+
+    fun getLdtkLevel(ldtkWorld: LDTKWorld, levelName: String) : Level =
+        if (ldtkWorld.levelsByName.contains(levelName)) {
+            ldtkWorld.levelsByName[levelName]!!.level
+        } else error("AssetStore: LDtkLevel '$levelName' not found!")
 
     fun getNinePatch(name: String) : NinePatchBmpSlice =
         if (images.contains(name)) {
@@ -120,10 +133,14 @@ object AssetStore {
         println("AssetStore: Start loading [${type.name}] resources from '${assetConfig.folderName}'...")
 
         // Update maps of music, images, ...
-// TODO
-//        assetConfig.tiledMaps.forEach { tiledMap ->
-//            tiledMaps[tiledMap.key] = Pair(type, resourcesVfs[assetConfig.assetFolderName + "/" + tiledMap.value].readTiledMap(atlas = atlas))
-//        }
+        assetConfig.tileMaps.forEach { tileMap ->
+            when (tileMap.value.type) {
+                TileMapType.LDtk -> ldtkWorld[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readLDTKWorld(extrude = true))
+                // TODO implement Tiled loading
+                TileMapType.Tiled -> { }  // tiledMaps[tiledMap.key] = Pair(type, resourcesVfs[assetConfig.assetFolderName + "/" + tiledMap.value].readTiledMap(atlas = atlas))
+            }
+        }
+
         assetConfig.sounds.forEach { sound ->
             val soundFile = resourcesVfs[assetConfig.folderName + "/" + sound.value].readMusic()
             val soundChannel = soundFile.play()
