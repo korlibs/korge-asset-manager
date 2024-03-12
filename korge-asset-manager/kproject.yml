@@ -5,7 +5,7 @@ plugins:
 
 dependencies:
   - "maven::common::com.soywiz.korlibs.korge2:korge"
-  - https://github.com/korlibs/korge-parallax/tree/94bb0b1b86dc0d593e1baa520a0f2ce8d03e5238/korge-parallax
+  - https://github.com/korlibs/korge-parallax/tree/00b2659614a39d0daab9023678d016d2b65c80fd/korge-parallax
   - https://github.com/korlibs/korge-ldtk/tree/c590319a9b9b3811b564a22c20e12cd1e877b528/korge-ldtk
   # or use local copy (this needs to be updated also in kproject.yml config of korge-fleks)
 #  - ../../korge-parallax/korge-parallax
