@@ -8,7 +8,9 @@ import korlibs.image.bitmap.*
 import korlibs.image.font.Font
 import korlibs.image.font.readBitmapFont
 import korlibs.image.format.*
+import korlibs.image.tiles.tiled.*
 import korlibs.io.file.std.resourcesVfs
+import korlibs.korge.assetmanager.AssetStore.images
 import korlibs.korge.ldtk.*
 import korlibs.korge.ldtk.view.*
 import korlibs.korge.parallax.ParallaxDataContainer
@@ -26,7 +28,7 @@ import kotlin.collections.set
  * It means a world-asset is used in all levels of a world. An asset of type 'Level' means that it is really only used in
  * one level (e.g. level specific graphics or music). The 'Special' type of assets is meant to be used for loading assets
  * during a level which should be unloaded also within the level. This can be used for extensive graphics for a mid-level
- * boss. After the boss has be beaten the graphics can be unloaded since they are not needed anymore.
+ * boss. After the boss has been beaten the graphics can be unloaded since they are not needed anymore.
  */
 object AssetStore {
     val commonAtlas: MutableAtlasUnit = MutableAtlasUnit(1024, 2048, border = 1)
@@ -41,7 +43,7 @@ object AssetStore {
     internal var specialAssetConfig: AssetModel = AssetModel(type = AssetType.Special)
 
     var entityConfigs: MutableMap<String, ConfigBase> = mutableMapOf()
-// TODO    private var tiledMaps: MutableMap<String, Pair<AssetType, TiledMap>> = mutableMapOf()
+    internal var tiledMaps: MutableMap<String, Pair<AssetType, TiledMap>> = mutableMapOf()
     internal var ldtkWorld: MutableMap<String, Pair<AssetType, LDTKWorld>> = mutableMapOf()
     internal var backgrounds: MutableMap<String, Pair<AssetType, ParallaxDataContainer>> = mutableMapOf()
     internal var images: MutableMap<String, Pair<AssetType, ImageDataContainer>> = mutableMapOf()
@@ -96,11 +98,10 @@ object AssetStore {
         if (backgrounds.contains(name)) backgrounds[name]!!.second
         else error("AssetStore: Parallax background '$name' not found!")
 
-// TODO
-//    fun getTiledMap(name: String) : TiledMap {
-//        return if (tiledMaps.contains(name)) tiledMaps[name]!!.second
-//        else error("AssetStore: TiledMap '$name' not found!")
-//    }
+    fun getTiledMap(name: String) : TiledMap {
+        return if (tiledMaps.contains(name)) tiledMaps[name]!!.second
+        else error("AssetStore: TiledMap '$name' not found!")
+    }
 
     fun getFont(name: String) : Font {
         return if (fonts.contains(name)) fonts[name]!!.second
@@ -136,8 +137,7 @@ object AssetStore {
         assetConfig.tileMaps.forEach { tileMap ->
             when (tileMap.value.type) {
                 TileMapType.LDtk -> ldtkWorld[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readLDTKWorld(extrude = true))
-                // TODO implement Tiled loading
-                TileMapType.Tiled -> { }  // tiledMaps[tiledMap.key] = Pair(type, resourcesVfs[assetConfig.assetFolderName + "/" + tiledMap.value].readTiledMap(atlas = atlas))
+                TileMapType.Tiled -> tiledMaps[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readTiledMap(atlas = atlas))
             }
         }
 
@@ -190,7 +190,7 @@ object AssetStore {
         }
 
     private fun removeAssets(type: AssetType) {
-// TODO        tiledMaps.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
+        tiledMaps.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
         backgrounds.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
         images.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
         fonts.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
