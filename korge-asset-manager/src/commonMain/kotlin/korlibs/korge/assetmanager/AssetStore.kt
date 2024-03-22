@@ -127,7 +127,6 @@ object AssetStore {
                 specialAssetConfig = prepareCurrentAssets(assetConfig, specialAssetConfig) ?: return
                 specialAtlas
             }
-            else -> error("LoadAssets: Asset type for '${assetConfig.folderName}' is 'None', but it must be set to one of 'Common, World, Level, Special'")
         }
 
         val sw = Stopwatch().start()
