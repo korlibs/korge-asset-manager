@@ -2,7 +2,7 @@ package korlibs.korge.assetmanager
 
 import korlibs.audio.sound.SoundChannel
 import korlibs.audio.sound.readMusic
-import korlibs.datastructure.setExtra
+import korlibs.datastructure.*
 import korlibs.image.atlas.MutableAtlasUnit
 import korlibs.image.bitmap.*
 import korlibs.image.font.Font
@@ -10,7 +10,6 @@ import korlibs.image.font.readBitmapFont
 import korlibs.image.format.*
 import korlibs.image.tiles.tiled.*
 import korlibs.io.file.std.resourcesVfs
-import korlibs.korge.assetmanager.AssetStore.images
 import korlibs.korge.ldtk.*
 import korlibs.korge.ldtk.view.*
 import korlibs.korge.parallax.ParallaxDataContainer
@@ -64,7 +63,7 @@ object AssetStore {
         if (sounds.contains(name)) sounds[name]!!.second
         else error("AssetStore: Sound '$name' not found!")
 
-    fun getImage(name: String, slice: String = "") : ImageData =
+    fun getImageData(name: String, slice: String = "") : ImageData =
         if (images.contains(name)) {
             if (slice.isEmpty()) {
                 images[name]!!.second.default
@@ -74,6 +73,21 @@ object AssetStore {
                 } else error("AssetStore: Slice '$slice' of image '$name' not found!")
             }
         } else error("AssetStore: Image '$name' not found!")
+
+    fun getSprite(name: String, animation: String?, frameNumber: Int) : BmpSlice {
+        val animationFrames = if (animation != null) {
+            val spriteAnimations = getImageData(name).animationsByName
+            if (spriteAnimations.contains(animation)) {
+                spriteAnimations[animation]!!.frames
+            } else error("AssetStore: Sprite animation '$animation' not found!")
+        } else {
+            getImageData(name).defaultAnimation.frames
+        }
+
+        return if (animationFrames.size > frameNumber) {
+            animationFrames[frameNumber].slice
+        } else error("AssetStore: Sprite animation frame '$frameNumber' out of bounds!")
+    }
 
     fun getLdtkWorld(name: String) : LDTKWorld =
         if (ldtkWorld.contains(name)) {
