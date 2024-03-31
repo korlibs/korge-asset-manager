@@ -74,19 +74,18 @@ object AssetStore {
             }
         } else error("AssetStore: Image '$name' not found!")
 
-    fun getSprite(name: String, animation: String?, frameNumber: Int) : BmpSlice {
+    fun getImageFrame(name: String, animation: String?, frameNumber: Int) : ImageFrame {
         val animationFrames = if (animation != null) {
             val spriteAnimations = getImageData(name).animationsByName
             if (spriteAnimations.contains(animation)) {
                 spriteAnimations[animation]!!.frames
-            } else error("AssetStore: Sprite animation '$animation' not found!")
+            } else error("AssetStore: Image animation '$animation' not found!")
         } else {
             getImageData(name).defaultAnimation.frames
         }
-
         return if (animationFrames.size > frameNumber) {
-            animationFrames[frameNumber].slice
-        } else error("AssetStore: Sprite animation frame '$frameNumber' out of bounds!")
+            animationFrames[frameNumber]
+        } else error("AssetStore: Image animation frame '$frameNumber' out of bounds!")
     }
 
     fun getLdtkWorld(name: String) : LDTKWorld =
