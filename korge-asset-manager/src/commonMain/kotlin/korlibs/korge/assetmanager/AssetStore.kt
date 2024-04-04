@@ -63,9 +63,9 @@ object AssetStore {
         if (sounds.contains(name)) sounds[name]!!.second
         else error("AssetStore: Sound '$name' not found!")
 
-    fun getImageData(name: String, slice: String = "") : ImageData =
+    fun getImageData(name: String, slice: String? = null) : ImageData =
         if (images.contains(name)) {
-            if (slice.isEmpty()) {
+            if (slice == null) {
                 images[name]!!.second.default
             } else {
                 if (images[name]!!.second[slice] != null) {
@@ -74,7 +74,7 @@ object AssetStore {
             }
         } else error("AssetStore: Image '$name' not found!")
 
-    fun getImageFrame(name: String, animation: String?, frameNumber: Int) : ImageFrame {
+    fun getImageFrame(name: String, animation: String? = null, frameNumber: Int = 0) : ImageFrame {
         val animationFrames = if (animation != null) {
             val spriteAnimations = getImageData(name).animationsByName
             if (spriteAnimations.contains(animation)) {
