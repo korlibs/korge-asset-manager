@@ -123,65 +123,83 @@ object AssetStore {
 
     suspend fun loadAssets(assetConfig: AssetModel) {
         val type: AssetType = assetConfig.type
+        var assetLoaded = false
         val atlas = when (type) {
             AssetType.Common -> {
-                commonAssetConfig = prepareCurrentAssets(assetConfig, commonAssetConfig) ?: return  // Just return if those assets are already loaded
+                prepareCurrentAssets(assetConfig, commonAssetConfig)?.also { config ->
+                    commonAssetConfig = config
+                    assetLoaded = true
+                }
                 commonAtlas
             }
             AssetType.World -> {
-                currentWorldAssetConfig = prepareCurrentAssets(assetConfig, currentWorldAssetConfig) ?: return
+                prepareCurrentAssets(assetConfig, currentWorldAssetConfig)?.also { config ->
+                    currentWorldAssetConfig = config
+                    assetLoaded = true
+                }
                 worldAtlas
             }
             AssetType.Level -> {
-                currentLevelAssetConfig = prepareCurrentAssets(assetConfig, currentLevelAssetConfig) ?: return
+                prepareCurrentAssets(assetConfig, currentLevelAssetConfig)?.also { config ->
+                    currentLevelAssetConfig = config
+                    assetLoaded = true
+                }
                 levelAtlas
             }
             AssetType.Special -> {
-                specialAssetConfig = prepareCurrentAssets(assetConfig, specialAssetConfig) ?: return
+                prepareCurrentAssets(assetConfig, specialAssetConfig)?.also { config ->
+                    specialAssetConfig = config
+                    assetLoaded = true
+                }
                 specialAtlas
             }
         }
 
-        val sw = Stopwatch().start()
-        println("AssetStore: Start loading [${type.name}] resources from '${assetConfig.folderName}'...")
+        if (assetLoaded) {
 
-        // Update maps of music, images, ...
-        assetConfig.tileMaps.forEach { tileMap ->
-            when (tileMap.value.type) {
-                TileMapType.LDtk -> ldtkWorld[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readLDTKWorld(extrude = true))
-                TileMapType.Tiled -> tiledMaps[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readTiledMap(atlas = atlas))
-            }
-        }
+            val sw = Stopwatch().start()
+            println("AssetStore: Start loading [${type.name}] resources from '${assetConfig.folderName}'...")
 
-        assetConfig.sounds.forEach { sound ->
-            val soundFile = resourcesVfs[assetConfig.folderName + "/" + sound.value].readMusic()
-            val soundChannel = soundFile.play()
-//            val soundChannel = resourcesVfs[assetConfig.assetFolderName + "/" + sound.value].readSound().play()
-            soundChannel.pause()
-            sounds[sound.key] = Pair(type, soundChannel)
-        }
-        assetConfig.backgrounds.forEach { background ->
-            backgrounds[background.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + background.value.aseName].readParallaxDataContainer(background.value, ASE, atlas = atlas))
-        }
-        assetConfig.images.forEach { image ->
-            images[image.key] = Pair(type,
-                if (image.value.layers == null) {
-                    resourcesVfs[assetConfig.folderName + "/" + image.value.fileName].readImageDataContainer(ASE.toProps(), atlas = atlas)
-                } else {
-                    val props = ASE.toProps() // TODO check -- ImageDecodingProps(it.value.fileName, extra = ExtraTypeCreate())
-                    props.setExtra("layers", image.value.layers)
-                    resourcesVfs[assetConfig.folderName + "/" + image.value.fileName].readImageDataContainer(props, atlas)
+            // Update maps of music, images, ...
+            assetConfig.tileMaps.forEach { tileMap ->
+                when (tileMap.value.type) {
+                    TileMapType.LDtk -> ldtkWorld[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readLDTKWorld(extrude = true))
+                    TileMapType.Tiled -> tiledMaps[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readTiledMap(atlas = atlas))
                 }
-            )
-        }
-        assetConfig.fonts.forEach { font ->
-            fonts[font.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + font.value].readBitmapFont(atlas = atlas))
-        }
-        assetConfig.entityConfigs.forEach { config ->
-            entityConfigs[config.key] = config.value
-        }
+            }
 
-        println("Assets: Loaded resources in ${sw.elapsed}")
+            assetConfig.sounds.forEach { sound ->
+                val soundFile = resourcesVfs[assetConfig.folderName + "/" + sound.value].readMusic()
+                val soundChannel = soundFile.play()
+//            val soundChannel = resourcesVfs[assetConfig.assetFolderName + "/" + sound.value].readSound().play()
+                soundChannel.pause()
+                sounds[sound.key] = Pair(type, soundChannel)
+            }
+            assetConfig.backgrounds.forEach { background ->
+                backgrounds[background.key] =
+                    Pair(type, resourcesVfs[assetConfig.folderName + "/" + background.value.aseName].readParallaxDataContainer(background.value, ASE, atlas = atlas))
+            }
+            assetConfig.images.forEach { image ->
+                images[image.key] = Pair(
+                    type,
+                    if (image.value.layers == null) {
+                        resourcesVfs[assetConfig.folderName + "/" + image.value.fileName].readImageDataContainer(ASE.toProps(), atlas = atlas)
+                    } else {
+                        val props = ASE.toProps() // TODO check -- ImageDecodingProps(it.value.fileName, extra = ExtraTypeCreate())
+                        props.setExtra("layers", image.value.layers)
+                        resourcesVfs[assetConfig.folderName + "/" + image.value.fileName].readImageDataContainer(props, atlas)
+                    }
+                )
+            }
+            assetConfig.fonts.forEach { font ->
+                fonts[font.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + font.value].readBitmapFont(atlas = atlas))
+            }
+            assetConfig.entityConfigs.forEach { config ->
+                entityConfigs[config.key] = config.value
+            }
+
+            println("Assets: Loaded resources in ${sw.elapsed}")
+        }
     }
 
     private fun prepareCurrentAssets(newAssetConfig: AssetModel, currentAssetConfig: AssetModel): AssetModel? =
