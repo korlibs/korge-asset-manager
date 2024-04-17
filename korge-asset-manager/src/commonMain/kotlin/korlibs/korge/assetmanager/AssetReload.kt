@@ -113,7 +113,6 @@ class ResourceDirWatcherConfiguration(
                 }
             }
         }
-
     }
 
     private suspend fun checkAssetFolders(file: VfsFile, assetUpdater: AssetUpdaterConfiguration, assetConfig: AssetModel, assetReloadContext: CoroutineContext) {
@@ -173,7 +172,7 @@ class ResourceDirWatcherConfiguration(
                     // Give aseprite more time to finish writing the files
                     delay(100)
                     val assetName = config.key
-                    AssetStore.backgrounds[assetName] = Pair(assetConfig.type, resourcesVfs[assetConfig.folderName + "/" + config.value.aseName].readParallaxDataContainer(config.value, ASE, atlas = null))
+                    AssetStore.backgrounds[assetName]?.second?.parallaxDataContainer = resourcesVfs[assetConfig.folderName + "/" + config.value.aseName].readParallaxDataContainer(config.value, ASE, atlas = null)
 
                     println("\nTriggering asset change for: $assetName")
                     // Guard period until reloading is activated again - this is used for debouncing watch messages
