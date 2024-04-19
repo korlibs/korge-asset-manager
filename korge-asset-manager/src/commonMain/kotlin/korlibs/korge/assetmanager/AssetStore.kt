@@ -43,34 +43,10 @@ object AssetStore {
     var entityConfigs: MutableMap<String, ConfigBase> = mutableMapOf()
     internal var tiledMaps: MutableMap<String, Pair<AssetType, TiledMap>> = mutableMapOf()
     internal var ldtkWorld: MutableMap<String, Pair<AssetType, LDTKWorld>> = mutableMapOf()
-    internal var backgrounds: MutableMap<String, Pair<AssetType, BackgroundContainer>> = mutableMapOf()
+    internal var backgrounds: MutableMap<String, Pair<AssetType, ParallaxDataContainer>> = mutableMapOf()
     internal var images: MutableMap<String, Pair<AssetType, ImageDataContainer>> = mutableMapOf()
     internal var fonts: MutableMap<String, Pair<AssetType, Font>> = mutableMapOf()
     internal var sounds: MutableMap<String, Pair<AssetType, SoundChannel>> = mutableMapOf()
-
-    data class BackgroundContainer(
-        var parallaxDataContainer: ParallaxDataContainer,
-        val parallaxPlaneSpeedFactors: FloatArray
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null || this::class != other::class) return false
-
-            other as BackgroundContainer
-
-            if (!parallaxPlaneSpeedFactors.contentEquals(other.parallaxPlaneSpeedFactors)) return false
-            if (parallaxDataContainer != other.parallaxDataContainer) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = parallaxPlaneSpeedFactors.contentHashCode()
-            result = 31 * result + parallaxDataContainer.hashCode()
-            return result
-        }
-    }
-
 
     fun <T : ConfigBase> addEntityConfig(identifier: String, entityConfig: T) {
         entityConfigs[identifier] = entityConfig
@@ -130,7 +106,7 @@ object AssetStore {
             } else error("AssetStore: Image layer of '$name' not found!")
         } else error("AssetStore: Image '$name' not found!")
 
-    fun getBackground(name: String) : BackgroundContainer =
+    fun getBackground(name: String) : ParallaxDataContainer =
         if (backgrounds.contains(name)) backgrounds[name]!!.second
         else error("AssetStore: Parallax background '$name' not found!")
 
@@ -199,39 +175,7 @@ object AssetStore {
                 sounds[sound.key] = Pair(type, soundChannel)
             }
             assetConfig.backgrounds.forEach { background ->
-                val parallaxDataContainer = resourcesVfs[assetConfig.folderName + "/" + background.value.aseName].readParallaxDataContainer(background.value, ASE, atlas = atlas)
-
-                val parallaxLayerSize: Int =
-                    when (parallaxDataContainer.config.mode) {
-                        ParallaxConfig.Mode.HORIZONTAL_PLANE -> {
-                            (parallaxDataContainer.backgroundLayers?.height ?: parallaxDataContainer.foregroundLayers?.height ?: parallaxDataContainer.attachedLayersFront?.height
-                            ?: parallaxDataContainer.attachedLayersRear?.height ?: 0) - (parallaxDataContainer.config.parallaxPlane?.offset ?: 0)
-                        }
-                        ParallaxConfig.Mode.VERTICAL_PLANE -> {
-                            (parallaxDataContainer.backgroundLayers?.width ?: parallaxDataContainer.foregroundLayers?.width ?: parallaxDataContainer.attachedLayersFront?.width
-                            ?: parallaxDataContainer.attachedLayersRear?.height ?: 0) - (parallaxDataContainer.config.parallaxPlane?.offset ?: 0)
-                        }
-                        ParallaxConfig.Mode.NO_PLANE -> 0  // not used without parallax plane setup
-                    }
-
-                // Calculate array of speed factors for each line in the parallax plane.
-                // The array will contain numbers starting from 1.0 -> 0.0 and then from 0.0 -> 1.0
-                // The first part of the array is used as speed factor for the upper / left side of the parallax plane.
-                // The second part is used for the lower / right side of the parallax plane.
-                val parallaxPlaneSpeedFactor = FloatArray(
-                    parallaxLayerSize
-                ) { i ->
-                    val midPoint: Float = parallaxLayerSize * 0.5f
-                    (parallaxDataContainer.config.parallaxPlane?.speedFactor ?: 1f) * (
-                        // The pixel in the point of view must not stand still, they need to move with the lowest possible speed (= 1 / midpoint)
-                        // Otherwise the midpoint is "running" away over time
-                        if (i < midPoint)
-                            1f - (i / midPoint)
-                        else
-                            (i - midPoint + 1f) / midPoint
-                        )
-                }
-                backgrounds[background.key] = Pair(type, BackgroundContainer(parallaxDataContainer, parallaxPlaneSpeedFactor))
+                backgrounds[background.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + background.value.aseName].readParallaxDataContainer(background.value, ASE, atlas = atlas))
             }
             assetConfig.images.forEach { image ->
                 images[image.key] = Pair(

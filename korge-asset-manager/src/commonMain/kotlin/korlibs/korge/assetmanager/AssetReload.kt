@@ -172,7 +172,7 @@ class ResourceDirWatcherConfiguration(
                     // Give aseprite more time to finish writing the files
                     delay(100)
                     val assetName = config.key
-                    AssetStore.backgrounds[assetName]?.second?.parallaxDataContainer = resourcesVfs[assetConfig.folderName + "/" + config.value.aseName].readParallaxDataContainer(config.value, ASE, atlas = null)
+                    AssetStore.backgrounds[assetName] = Pair(assetUpdater.type, resourcesVfs[assetConfig.folderName + "/" + config.value.aseName].readParallaxDataContainer(config.value, ASE, atlas = null))
 
                     println("\nTriggering asset change for: $assetName")
                     // Guard period until reloading is activated again - this is used for debouncing watch messages
