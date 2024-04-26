@@ -78,13 +78,19 @@ object AssetStore {
             val spriteAnimations = getImageData(name).animationsByName
             if (spriteAnimations.contains(animation)) {
                 spriteAnimations[animation]!!.frames
-            } else error("AssetStore: Image animation '$animation' not found!")
+            } else {
+                println("WARNING - AssetStore: Image animation '$animation' not found!")
+                return ImageFrame(0)
+            }
         } else {
             getImageData(name).defaultAnimation.frames
         }
         return if (animationFrames.size > frameNumber) {
             animationFrames[frameNumber]
-        } else error("AssetStore: Image animation frame '$frameNumber' out of bounds!")
+        } else {
+            println("WARNING -- AssetStore: Image animation frame '$frameNumber' out of bounds!")
+            ImageFrame(0)
+        }
     }
 
     fun getLdtkWorld(name: String) : LDTKWorld =
