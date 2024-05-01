@@ -17,7 +17,6 @@ data class AssetModel(
     val images: MutableMap<String, ImageDataConfig> = mutableMapOf(),
     val fonts: MutableMap<String, String> = mutableMapOf(),
     val tileMaps: MutableMap<String, TileMapConfig> = mutableMapOf(),
-    val entityConfigs: MutableMap<String, ConfigBase> = mutableMapOf()
 ) {
     data class ImageDataConfig(
         val fileName: String = "",
@@ -48,10 +47,6 @@ data class AssetModel(
     fun addTileMap(id: String, fileName: String, type: TileMapType) {
         tileMaps[id] = TileMapConfig(fileName, type)
     }
-
-    fun addEntityConfig(id: String, config: ConfigBase) {
-        entityConfigs[id] = config
-    }
 }
 
 
@@ -66,6 +61,4 @@ suspend fun loadAssets(type: AssetType, folderName: String, hotReloading: Boolea
 }
 
 enum class AssetType { Common, World, Level, Special }
-enum class TileMapType { LDtk, Tiled }
-
-interface ConfigBase
+enum class TileMapType { LDTK, TILED }

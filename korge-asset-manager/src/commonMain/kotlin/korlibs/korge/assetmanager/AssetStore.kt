@@ -40,23 +40,12 @@ object AssetStore {
     internal var currentLevelAssetConfig: AssetModel = AssetModel(type = AssetType.Level)
     internal var specialAssetConfig: AssetModel = AssetModel(type = AssetType.Special)
 
-    var entityConfigs: MutableMap<String, ConfigBase> = mutableMapOf()
     internal var tiledMaps: MutableMap<String, Pair<AssetType, TiledMap>> = mutableMapOf()
     internal var ldtkWorld: MutableMap<String, Pair<AssetType, LDTKWorld>> = mutableMapOf()
     internal var backgrounds: MutableMap<String, Pair<AssetType, ParallaxDataContainer>> = mutableMapOf()
     internal var images: MutableMap<String, Pair<AssetType, ImageDataContainer>> = mutableMapOf()
     internal var fonts: MutableMap<String, Pair<AssetType, Font>> = mutableMapOf()
     internal var sounds: MutableMap<String, Pair<AssetType, SoundChannel>> = mutableMapOf()
-
-    fun <T : ConfigBase> addEntityConfig(identifier: String, entityConfig: T) {
-        entityConfigs[identifier] = entityConfig
-    }
-
-    inline fun <reified T : ConfigBase> getEntityConfig(name: String) : T {
-        val config: ConfigBase = entityConfigs[name] ?: error("AssetStore - getConfig: No config found for configId name '$name'!")
-        if (config !is T) error("AssetStore - getConfig: Config for '$name' is not of type ${T::class}!")
-        return config
-    }
 
     fun getSound(name: String) : SoundChannel =
         if (sounds.contains(name)) sounds[name]!!.second
@@ -154,8 +143,8 @@ object AssetStore {
             // Update maps of music, images, ...
             assetConfig.tileMaps.forEach { tileMap ->
                 when (tileMap.value.type) {
-                    TileMapType.LDtk -> ldtkWorld[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readLDTKWorld(extrude = true))
-                    TileMapType.Tiled -> tiledMaps[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readTiledMap(atlas = atlas))
+                    TileMapType.LDTK -> ldtkWorld[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readLDTKWorld(extrude = true))
+                    TileMapType.TILED -> tiledMaps[tileMap.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + tileMap.value.fileName].readTiledMap(atlas = atlas))
                 }
             }
 
@@ -183,9 +172,6 @@ object AssetStore {
             }
             assetConfig.fonts.forEach { font ->
                 fonts[font.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + font.value].readBitmapFont(atlas = atlas))
-            }
-            assetConfig.entityConfigs.forEach { config ->
-                entityConfigs[config.key] = config.value
             }
 
             println("Assets: Loaded resources in ${sw.elapsed}")
