@@ -52,7 +52,7 @@ data class AssetModel(
 
 suspend fun loadAssets(type: AssetType, folderName: String, hotReloading: Boolean = false, cfg: AssetModel.() -> Unit) {
     val assetModel = AssetModel(type, folderName).apply(cfg)
-    AssetStore.loadAssets(assetModel)
+    AssetStore.loadAssets(assetModel, hotReloading)
     if (hotReloading) {
         configureResourceDirWatcher {
             addAssetWatcher(type) {}
