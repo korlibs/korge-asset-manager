@@ -49,12 +49,14 @@ data class AssetModel(
     }
 }
 
-
-suspend fun loadAssets(type: AssetType, folderName: String, hotReloading: Boolean = false, cfg: AssetModel.() -> Unit) {
+/**
+ * Call this function inside KorGE scenes to load additional assets into an already created [AssetStore] object.
+ */
+suspend fun AssetStore.loadAssets(type: AssetType, folderName: String, hotReloading: Boolean = false, cfg: AssetModel.() -> Unit) {
     val assetModel = AssetModel(type, folderName).apply(cfg)
-    AssetStore.loadAssets(assetModel, hotReloading)
+    this.loadAssets(assetModel, hotReloading)
     if (hotReloading) {
-        configureResourceDirWatcher {
+        this.configureResourceDirWatcher {
             addAssetWatcher(type) {}
         }
     }

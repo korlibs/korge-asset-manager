@@ -17,6 +17,7 @@ import korlibs.time.Stopwatch
 import kotlin.collections.set
 
 
+
 /**
  * This class is responsible to load all kind of game data and make it usable / consumable by entities of Korge-Fleks.
  *
@@ -28,7 +29,7 @@ import kotlin.collections.set
  * during a level which should be unloaded also within the level. This can be used for extensive graphics for a mid-level
  * boss. After the boss has been beaten the graphics can be unloaded since they are not needed anymore.
  */
-object AssetStore {
+class AssetStore {
     val commonAtlas: MutableAtlasUnit = MutableAtlasUnit(1024, 2048, border = 1)
     val worldAtlas: MutableAtlasUnit = MutableAtlasUnit(1024, 2048, border = 1)
     val levelAtlas: MutableAtlasUnit = MutableAtlasUnit(1024, 2048, border = 1)

@@ -89,15 +89,15 @@ class ResourceDirWatcherConfiguration(
     /**
      * Configures the resource directory watcher for each enabled asset type.
      */
-    suspend fun configure() : ResourceDirWatcherConfiguration {
-        enableAssetWatcher(commonAssetUpdater, AssetStore.commonAssetConfig)
-        enableAssetWatcher(worldAssetUpdater, AssetStore.currentWorldAssetConfig)
-        enableAssetWatcher(levelAssetUpdater, AssetStore.currentLevelAssetConfig)
-        enableAssetWatcher(specialAssetUpdater, AssetStore.specialAssetConfig)
+    suspend fun configure(assetStore: AssetStore) : ResourceDirWatcherConfiguration {
+        enableAssetWatcher(assetStore, commonAssetUpdater, assetStore.commonAssetConfig)
+        enableAssetWatcher(assetStore, worldAssetUpdater, assetStore.currentWorldAssetConfig)
+        enableAssetWatcher(assetStore, levelAssetUpdater, assetStore.currentLevelAssetConfig)
+        enableAssetWatcher(assetStore, specialAssetUpdater, assetStore.specialAssetConfig)
         return this
     }
 
-    private suspend fun enableAssetWatcher(assetUpdater: AssetUpdaterConfiguration, assetConfig: AssetModel) {
+    private suspend fun enableAssetWatcher(assetStore: AssetStore, assetUpdater: AssetUpdaterConfiguration, assetConfig: AssetModel) {
         if (!assetUpdater.enabled && assetUpdater.toBeEnabled) {
             assetUpdater.enabled = true
             assetUpdater.toBeEnabled = false
@@ -107,7 +107,7 @@ class ResourceDirWatcherConfiguration(
                     println("Add watcher for '${path}'")
                     watch {
                         if (it.kind == Vfs.FileEvent.Kind.MODIFIED) {
-                            checkAssetFolders(it.file, assetUpdater, assetConfig, coroutineContext)
+                            checkAssetFolders(assetStore, it.file, assetUpdater, assetConfig, coroutineContext)
                         }
                     }
                 }
@@ -115,7 +115,7 @@ class ResourceDirWatcherConfiguration(
         }
     }
 
-    private suspend fun checkAssetFolders(file: VfsFile, assetUpdater: AssetUpdaterConfiguration, assetConfig: AssetModel, assetReloadContext: CoroutineContext) {
+    private suspend fun checkAssetFolders(assetStore: AssetStore, file: VfsFile, assetUpdater: AssetUpdaterConfiguration, assetConfig: AssetModel, assetReloadContext: CoroutineContext) {
 
         // TODO: Currently only fonts, sprite images and parallax images are reloaded
         //       -> Implement reloading also for other asset types
@@ -129,7 +129,7 @@ class ResourceDirWatcherConfiguration(
                 launchImmediately(context = assetReloadContext) {
                     delay(500)
                     val assetName = config.key
-                    AssetStore.fonts[assetName] = Pair(assetUpdater.type, resourcesVfs[assetConfig.folderName + "/" + config.value].readBitmapFont(atlas = null))
+                    assetStore.fonts[assetName] = Pair(assetUpdater.type, resourcesVfs[assetConfig.folderName + "/" + config.value].readBitmapFont(atlas = null))
                 }
 
                 delay(100)
@@ -146,7 +146,7 @@ class ResourceDirWatcherConfiguration(
                 launchImmediately(context = assetReloadContext) {
                     delay(500)
                     val assetName = config.key
-                    AssetStore.images[assetName] = Pair(assetUpdater.type,
+                    assetStore.images[assetName] = Pair(assetUpdater.type,
                         if (config.value.layers == null) {
                             resourcesVfs[assetConfig.folderName + "/" + config.value.fileName].readImageDataContainer(ASE.toProps(), atlas = null)
                         } else {
@@ -172,7 +172,7 @@ class ResourceDirWatcherConfiguration(
                     // Give aseprite more time to finish writing the files
                     delay(100)
                     val assetName = config.key
-                    AssetStore.backgrounds[assetName] = Pair(assetUpdater.type, resourcesVfs[assetConfig.folderName + "/" + config.value.aseName].readParallaxDataContainer(config.value, ASE, atlas = null))
+                    assetStore.backgrounds[assetName] = Pair(assetUpdater.type, resourcesVfs[assetConfig.folderName + "/" + config.value.aseName].readParallaxDataContainer(config.value, ASE, atlas = null))
 
                     println("\nTriggering asset change for: $assetName")
                     // Guard period until reloading is activated again - this is used for debouncing watch messages
@@ -198,13 +198,13 @@ class ResourceDirWatcherConfiguration(
  * @param cfg the [configuration][ResourceDirWatcherConfiguration] of the [ResourceDirWatcher][ResourceDirWatcherConfiguration]
  * which contains callbacks for each type of assets to be reloaded when they change in Resources directory.
  */
-suspend fun configureResourceDirWatcher(cfg: ResourceDirWatcherConfiguration.() -> Unit) {
+suspend fun AssetStore.configureResourceDirWatcher(cfg: ResourceDirWatcherConfiguration.() -> Unit) {
 
     if (ResourceDirWatcherConfiguration.CURRENT_WATCHER == null) {
-        val resourceDirWatcher = ResourceDirWatcherConfiguration().apply(cfg).configure()
+        val resourceDirWatcher = ResourceDirWatcherConfiguration().apply(cfg).configure(this)
         ResourceDirWatcherConfiguration.CURRENT_WATCHER = resourceDirWatcher
     } else {
-        ResourceDirWatcherConfiguration.CURRENT_WATCHER!!.apply(cfg).configure()
+        ResourceDirWatcherConfiguration.CURRENT_WATCHER!!.apply(cfg).configure(this)
     }
 }
 
