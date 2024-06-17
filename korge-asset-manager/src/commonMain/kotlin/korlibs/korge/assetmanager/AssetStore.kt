@@ -172,7 +172,8 @@ class AssetStore {
                 )
             }
             assetConfig.fonts.forEach { font ->
-                fonts[font.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + font.value].readBitmapFont(atlas = atlas))
+                // TODO there is a bug with drawing spaces from font when the font is added to an atlas - remove atlas for now
+                fonts[font.key] = Pair(type, resourcesVfs[assetConfig.folderName + "/" + font.value].readBitmapFont())  // readBitmapFont(atlas = atlas))
             }
 
             println("Assets: Loaded resources in ${sw.elapsed}")
@@ -202,11 +203,14 @@ class AssetStore {
             }
         }
 
+    /**
+     * Remove all assets which have a specific given [AssetType].
+     */
     private fun removeAssets(type: AssetType) {
-        tiledMaps.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
-        backgrounds.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
-        images.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
-        fonts.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
-        sounds.entries.iterator().let { while (it.hasNext()) if (it.next().value.first == type) it.remove() }
+        tiledMaps.entries.removeAll { it.value.first == type }
+        backgrounds.entries.removeAll { it.value.first == type }
+        images.entries.removeAll { it.value.first == type }
+        fonts.entries.removeAll { it.value.first == type }
+        sounds.entries.removeAll { it.value.first == type }
     }
 }
