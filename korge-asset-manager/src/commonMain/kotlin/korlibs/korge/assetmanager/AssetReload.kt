@@ -5,11 +5,13 @@ import korlibs.image.font.*
 import korlibs.image.format.ASE
 import korlibs.image.format.readImageDataContainer
 import korlibs.image.format.toProps
+import korlibs.image.tiles.tiled.*
 import korlibs.io.async.launchImmediately
 import korlibs.io.file.Vfs
 import korlibs.io.file.VfsFile
 import korlibs.io.file.fullName
 import korlibs.io.file.std.resourcesVfs
+import korlibs.korge.ldtk.view.*
 import korlibs.korge.parallax.readParallaxDataContainer
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
@@ -33,13 +35,13 @@ class AssetUpdaterConfiguration(
     internal val imageChangedCallback: MutableList<() -> Unit> = mutableListOf(),
     internal val fontChangedCallback: MutableList<() -> Unit> = mutableListOf(),
     internal val backgroundCallback: MutableList<() -> Unit> = mutableListOf(),
+    internal val ldtkLevelMapCallback: MutableList<() -> Unit> = mutableListOf(),
  ) {
 
     fun onImageChanged(callback: () -> Unit) { imageChangedCallback += callback }
-
     fun onFontChanged(callback: () -> Unit) { fontChangedCallback += callback }
-
     fun onBackgroundChanged(callback: () -> Unit) { backgroundCallback += callback }
+    fun onLdtkLevelMapChanged(callback: () -> Unit) { ldtkLevelMapCallback += callback }
 }
 
 /**
@@ -180,6 +182,29 @@ class ResourceDirWatcherConfiguration(
                     reloading = false
                     println("Finished")
                     assetUpdater.backgroundCallback.forEach { it.invoke() }
+                }
+            }
+        }
+        assetConfig.tileMaps.forEach { config ->
+            if (file.fullName.contains(config.value.fileName) && !reloading) {
+                reloading = true  // save that reloading is in progress
+                println("Reloading ${file.fullName}... ")
+
+                launchImmediately(context = assetReloadContext) {
+                    // Give LDtk more time to finish writing the files
+                    delay(500)
+                    val assetName = config.key
+                    when (config.value.type) {
+                        TileMapType.LDTK -> assetStore.ldtkWorld[assetName] = Pair(assetUpdater.type, resourcesVfs[assetConfig.folderName + "/" + config.value.fileName].readLDTKWorld(extrude = true))
+                        TileMapType.TILED -> assetStore.tiledMaps[assetName] = Pair(assetUpdater.type, resourcesVfs[assetConfig.folderName + "/" + config.value.fileName].readTiledMap())
+                    }
+
+                    println("\nTriggering asset change for: $assetName")
+                    // Guard period until reloading is activated again - this is used for debouncing watch messages
+                    delay(100)
+                    reloading = false
+                    println("Finished")
+                    assetUpdater.ldtkLevelMapCallback.forEach { it.invoke() }
                 }
             }
         }
